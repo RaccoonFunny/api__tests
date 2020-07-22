@@ -9,7 +9,6 @@
 
   <?php
   // code...
-  require 'vendor/autoload.php';
   $AuthCode= htmlspecialchars($_GET["code"]);
   $user= htmlspecialchars($_GET["referer"]);
   $clientId= htmlspecialchars($_GET["client_id"]);
@@ -87,9 +86,67 @@
   $expires_in = $response['expires_in']; //Через сколько действие токена истекает
   //Окончание работы с oAuth 2.0
 
+  //Начало работы с API
+  require 'vendor/autoload.php';
+  $apiClient = new \AmoCRM\Client\AmoCRMApiClient ("7c2fc1ac-4f40-477b-8d15-bc307350293e", "l400pgDgV1rlR09A7Oj8JQVZpF8Q3x5hnHf6Ro8OwiioXCyIoeosDTYxvCIw8GnD", "https://koltashov-webdev.ru");
+  class OAuthConfig implements \AmoCRM\OAuth\OAuthConfigInterface   {
 
-  
+      public function getIntegrationId(): string
+      {
+          // TODO: Implement getIntegrationId() method.
+          return "7c2fc1ac-4f40-477b-8d15-bc307350293e";
+      }
+
+      public function getSecretKey(): string
+      {
+          // TODO: Implement getSecretKey() method.
+          return "l400pgDgV1rlR09A7Oj8JQVZpF8Q3x5hnHf6Ro8OwiioXCyIoeosDTYxvCIw8GnD";
+      }
+
+      public function getRedirectDomain(): string
+      {
+          // TODO: Implement getRedirectDomain() method.
+          return $access_Token;
+      }
+
+      public function __construct($access)
+      {
+          $this-> $access_Token = $access;
+      }
+  }
+  class OAuthServ implements \AmoCRM\OAuth\OAuthServiceInterface {
+      public function saveOAuthToken(\League\OAuth2\Client\Token\AccessTokenInterface $accessToken, string $baseDomain): void
+      {
+          // TODO: Implement saveOAuthToken() method.
+      }
+  }
+  $baseDomain = $accessToken->getValues()['baseDomain'];
+  $oAuthConfig = new OAuthConfig($baseDomain);
+  $oAuthService = new OAuthServ();
+
+  $apiClientFactory = new \AmoCRM\AmoCRM\Client\AmoCRMApiClientFactory($oAuthConfig, $oAuthService);
+  $apiClient = $apiClientFactory->make();
+
+
+  $apiClient = $apiClientFactory->make();
+  $apiClient->setAccessToken($accessToken)
+  ->setAccountBaseDomain($accessToken->getValues()['baseDomain']);
+  //Создаём 1000 контактов
+
+  for ($i=0; $i < 1000 ; $i++) {
+    // code...
+    $contact = new ContactModel();
+    $contact->setFirstName("Example contact $i");
+    $contact->setId($i);
+    $contact->setfirstName("Ivanushka $i");
+    try {
+      $contactModel = $apiClient->contacts()->addOne($contact);
+    } catch (AmoCRMApiException $e) {
+      printError($e);
+      die;
+    }
+  }
   ?>
 
-  </body>
-  </html>
+</body>
+</html>
