@@ -3,9 +3,29 @@
 <head>
   <meta charset="utf-8">
   <title>Хак</title>
+    <style>
+        body{
+            background-color: black;
+            color: #ffffff;
+            font-family: "TT Firs Neue";
+        }
+        .wrapper{
+            display: flex;
+            flex-direction: column;
+            width: 720px;
+            justify-content: space-between;
+            margin: 0 auto;
+        }
+        h3{
+            font-family: "TT Firs Neue DemiBold";
+            font-size: 36px;
+            color: #ab00ea;
+        }
+    </style>
 </head>
 <body>
-  <h3>Вы получили 2000 сущностей</h3>
+<div class="wrapper">
+  <h3>Вы получили 3000 сущностей</h3>
 
   <?php
   // code...
@@ -13,7 +33,7 @@
   $user= htmlspecialchars($_GET["referer"]);
   $clientId= htmlspecialchars($_GET["client_id"]);
   //
-  echo "<p style='font-size: 20px; color: #ab00ea'>".$user."</p>";
+  echo "<h3>".$user."</h3>";
   $subdomain = $user; //Поддомен нужного аккаунта
   $link = 'https://'.$subdomain.'/oauth2/access_token'; //Формируем URL для запроса
 
@@ -145,18 +165,19 @@
           $contact = new AmoCRM\Models\ContactModel();
           $contact->setName("Бот $id");
           $contact->setFirstName("Example contact $id");
-          $contact->setfirstName("Ivanushka $c $id");
+          $contact->setfirstName("Ivanushka  $id");
           $contactCollections->add($contact);
 
           $company = new AmoCRM\Models\CompanyModel();
-          $company->setName("Roga&Copita $c $i");
+          $company->setName("Roga&Copita $id");
           $company->setID($i);
           $companiesCollection->add($company);
 
           $lead = new AmoCRM\Models\LeadModel();
-          $lead->setName("Сделка века # $i");
+          $lead->setName("Сделка века # $id");
           $lead->setPrice(rand(100,10000));
           $leadsCollection->add($lead);
+          $id++;
       }
 
       try {
@@ -173,7 +194,6 @@
           $leadsCollectionAll =$apiClient->leads()->add($leadsCollection);
       } catch (AmoCRM\Exceptions\AmoCRMApiException $e) {
           printError($e);
-          die;
       }
       $links = new AmoCRM\Collections\LinksCollection();
       for ($f=0;$f<10; $f++){
@@ -182,82 +202,71 @@
               $apiClient->leads()->link($leadsCollectionAll[$f], $links);
           } catch (AmoCRM\Exceptions\AmoCRMApiException $e) {
               printError($e);
-              die;
           }
           $links->add($companiesCollectionAll[$f]);
           try {
               $apiClient->leads()->link($leadsCollectionAll[$f], $links);
           } catch (AmoCRM\Exceptions\AmoCRMApiException $e) {
               printError($e);
-              die;
           }
       }
       try {
           $apiClient->leads()->update($leadsCollectionAll);
       } catch (AmoCRM\Exceptions\AmoCRMApiException $e) {
           printError($e);
-          die;
       }
   }
-  //    у нас уже есть готовые ответы от сервера по сущностям, так что добавляем контакты к сделке
-//  $links = new AmoCRM\Collections\LinksCollection();
-//  $count = count($leadsCollectionAll);
-//  foreach ($leadsCollectionAll as $index => $model) {
-//
-//  }
-//  for ($i=0;$i<$count; $i++){
-//      $links->add($contactCollectionsAll[$i]);
-//      try {
-//          $apiClient->leads()->link($leadsCollectionAll[$i], $links);
-//      } catch (AmoCRM\Exceptions\AmoCRMApiException $e) {
-//          printError($e);
-//          die;
-//      }
-//      $links->add($companiesCollectionAll[$i]);
-//      try {
-//          $apiClient->leads()->link($leadsCollectionAll[$i], $links);
-//      } catch (AmoCRM\Exceptions\AmoCRMApiException $e) {
-//          printError($e);
-//          die;
-//      }
-//  }
-//  try {
-//      $apiClient->leads()->update($leadsCollectionAll);
-//  } catch (AmoCRM\Exceptions\AmoCRMApiException $e) {
-//      printError($e);
-//      die;
-//  }
-//      for ($c=0; $c<4 ; $c++) {
-//      $companiesCollection = new AmoCRM\Collections\CompaniesCollection();
-//      for ($i = 0; $i < 250; $i++) {
-//          $company = new AmoCRM\Models\CompanyModel();
-//          $company->setName("Roga&Copita $c $i");
-//          $company->setID($i);
-//          $companiesCollection->add($company);
-//      }
-//      try {
-//          $apiClient->companies()->add($companiesCollection);
-//      } catch (AmoCRMApiException $e) {
-//          printError($e);
-//      }
-//  }
-//
-//  for ($c=0; $c<4 ; $c++) {
-//      $leadsCollection = new AmoCRM\Collections\Leads\LeadsCollection();
-//      for ($i = 0; $i < 250; $i++) {
-//          $lead = new AmoCRM\Models\LeadModel();
-//          $lead->setName('Example $c.$i');
-//          $lead->setID($i);
-//          $leadsCollection->add($lead);
-//      }
-//      try {
-//          $apiClient->leads()->add($leadsCollection);
-//      } catch (AmoCRMApiException $e) {
-//          printError($e);
-//          die;
-//      }
-//  }
-  ?>
 
+
+  $contactFilter = new AmoCRM\Filters\ContactsFilter();
+  $contactFilter->setIds([1, 5170965]);
+  $companyFilter= new AmoCRM\Filters\CompaniesFilter();
+  $companyFilter->setIds([1,5170965]);
+  $leadsFilter = new AmoCRM\Filters\LeadsFilter();
+  $leadsFilter -> setIds([1, 5170956]);
+  //Создадим мультисписок
+  $cf = new AmoCRM\Models\CustomFields\MultiselectCustomFieldModel();
+  $cf-> setName("Мультисписок");
+  $cf->setEnums(
+      (new AmoCRM\Collections\CustomFields\CustomFieldEnumsCollection())
+          ->add(
+              (new AmoCRM\Models\CustomFields\EnumModel())
+                  ->setValue('Значение 1')
+                  ->setSort(10)
+          )
+          ->add(
+              (new AmoCRM\Models\CustomFields\EnumModel())
+                  ->setValue('Значение 2')
+                  ->setSort(20)
+          )
+          ->add(
+              (new AmoCRM\Models\CustomFields\EnumModel())
+                  ->setValue('Значение 3')
+                  ->setSort(30)
+          )
+  );
+
+  try {
+      //Забираем из базы все контакты с ID от 1 до 5170965
+      $contactConnect = $apiClient->leads()->get($contactFilter,[]);
+      //проходим по всей коллекции и добавляем ей поле мультисписок
+      for ($i=0;$i<40;$i++) {
+          $customFields = $contactConnect[$i] ->getCustomFieldsValues();
+          $customFields->add($cf);
+          try {
+              $apiClient->contacts()->updateOne($contactConnect[$i]);
+          } catch (AmoCRMApiException $e) {
+              printError($e);
+              die;
+          }
+      }
+  } catch (AmoCRM\Exceptions\AmoCRMApiException $e) {
+      printError($e);
+      die;
+  }
+
+
+  ?>
+</div>
 </body>
 </html>
