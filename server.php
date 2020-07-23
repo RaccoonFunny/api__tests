@@ -5,7 +5,7 @@
   <title>Хак</title>
 </head>
 <body>
-  <h3>Вы получили 4000 сущностей</h3>
+  <h3>Вы получили 2000 сущностей</h3>
 
   <?php
   // code...
@@ -25,12 +25,6 @@
     'code' => $_GET["code"],
     'redirect_uri' => 'https://koltashov-webdev.ru',
   ];
-  echo $link;
-  foreach ($data as $i) {
-    // code...
-    echo "<br>".$i."\r\n";
-  }
-
   /**
   * Нам необходимо инициировать запрос к серверу.
   * Воспользуемся библиотекой cURL (поставляется в составе PHP).
@@ -78,6 +72,7 @@
   * Данные получаем в формате JSON, поэтому, для получения читаемых данных,
   * нам придётся перевести ответ в формат, понятный PHP
   */
+
   $response = json_decode($out, true);
 
   $access_token = $response['access_token']; //Access токен
@@ -90,38 +85,34 @@
   require 'vendor/autoload.php';
   $apiClient = new \AmoCRM\Client\AmoCRMApiClient ("7c2fc1ac-4f40-477b-8d15-bc307350293e", "l400pgDgV1rlR09A7Oj8JQVZpF8Q3x5hnHf6Ro8OwiioXCyIoeosDTYxvCIw8GnD", "https://koltashov-webdev.ru");
   class OAuthConfig implements \AmoCRM\OAuth\OAuthConfigInterface   {
-
+      var $access_Token;
       public function getIntegrationId(): string
       {
-          // TODO: Implement getIntegrationId() method.
           return "7c2fc1ac-4f40-477b-8d15-bc307350293e";
       }
 
       public function getSecretKey(): string
       {
-          // TODO: Implement getSecretKey() method.
           return "l400pgDgV1rlR09A7Oj8JQVZpF8Q3x5hnHf6Ro8OwiioXCyIoeosDTYxvCIw8GnD";
       }
 
       public function getRedirectDomain(): string
       {
-          // TODO: Implement getRedirectDomain() method.
-          return $access_Token;
+          return $this->access_Token;
       }
 
-      public function __construct($access)
+      public function __construct($access_t)
       {
-          $this-> $access_Token = $access;
+          $this-> access_Token = $access_t;
       }
   }
   class OAuthServ implements \AmoCRM\OAuth\OAuthServiceInterface {
       public function saveOAuthToken(\League\OAuth2\Client\Token\AccessTokenInterface $accessToken, string $baseDomain): void
       {
-          // TODO: Implement saveOAuthToken() method.
+
       }
   }
-  $baseDomain = $accessToken->getValues()['baseDomain'];
-  $oAuthConfig = new OAuthConfig($baseDomain);
+  $oAuthConfig = new OAuthConfig($subdomain);
   $oAuthService = new OAuthServ();
 
   $apiClientFactory = new \AmoCRM\AmoCRM\Client\AmoCRMApiClientFactory($oAuthConfig, $oAuthService);
@@ -129,23 +120,143 @@
 
 
   $apiClient = $apiClientFactory->make();
-  $apiClient->setAccessToken($accessToken)
-  ->setAccountBaseDomain($accessToken->getValues()['baseDomain']);
-  //Создаём 1000 контактов
 
-  for ($i=0; $i < 1000 ; $i++) {
-    // code...
-    $contact = new ContactModel();
-    $contact->setFirstName("Example contact $i");
-    $contact->setId($i);
-    $contact->setfirstName("Ivanushka $i");
-    try {
-      $contactModel = $apiClient->contacts()->addOne($contact);
-    } catch (AmoCRMApiException $e) {
-      printError($e);
-      die;
-    }
+  $accessTk = new \League\OAuth2\Client\Token\AccessToken($response);
+
+  $subdomain = explode(".", $subdomain);
+  $subdomain = $subdomain[0];
+  $subdomain = $subdomain.".amocrm.ru";
+
+  $apiClient->setAccessToken($accessTk)
+  ->setAccountBaseDomain($subdomain);
+
+  $id = 1;
+  $contactCollectionsAll = new AmoCRM\Collections\ContactsCollection();
+  $companiesCollectionAll = new AmoCRM\Collections\CompaniesCollection();
+  $leadsCollectionAll = new AmoCRM\Collections\Leads\LeadsCollection();
+
+  for ($c=0; $c<4 ; $c++) {
+      $contactCollections = new AmoCRM\Collections\ContactsCollection();
+      $companiesCollection = new AmoCRM\Collections\CompaniesCollection();
+      $leadsCollection = new AmoCRM\Collections\Leads\LeadsCollection();
+
+      for ($i = 0; $i < 10; $i++) {
+          // code...
+          $contact = new AmoCRM\Models\ContactModel();
+          $contact->setName("Бот $id");
+          $contact->setFirstName("Example contact $id");
+          $contact->setfirstName("Ivanushka $c $id");
+          $contactCollections->add($contact);
+
+          $company = new AmoCRM\Models\CompanyModel();
+          $company->setName("Roga&Copita $c $i");
+          $company->setID($i);
+          $companiesCollection->add($company);
+
+          $lead = new AmoCRM\Models\LeadModel();
+          $lead->setName("Сделка века # $i");
+          $lead->setPrice(rand(100,10000));
+          $leadsCollection->add($lead);
+      }
+
+      try {
+          $contactCollectionsAll = $apiClient->contacts()->add($contactCollections);
+      } catch (AmoCRM\Exceptions\AmoCRMApiException $e) {
+          printError($e);
+      }
+      try {
+          $companiesCollectionAll =$apiClient->companies()->add($companiesCollection);
+      } catch (AmoCRM\Exceptions\AmoCRMApiException $e) {
+          printError($e);
+      }
+      try {
+          $leadsCollectionAll =$apiClient->leads()->add($leadsCollection);
+      } catch (AmoCRM\Exceptions\AmoCRMApiException $e) {
+          printError($e);
+          die;
+      }
+      $links = new AmoCRM\Collections\LinksCollection();
+      for ($f=0;$f<10; $f++){
+          $links->add($contactCollectionsAll[$f]);
+          try {
+              $apiClient->leads()->link($leadsCollectionAll[$f], $links);
+          } catch (AmoCRM\Exceptions\AmoCRMApiException $e) {
+              printError($e);
+              die;
+          }
+          $links->add($companiesCollectionAll[$f]);
+          try {
+              $apiClient->leads()->link($leadsCollectionAll[$f], $links);
+          } catch (AmoCRM\Exceptions\AmoCRMApiException $e) {
+              printError($e);
+              die;
+          }
+      }
+      try {
+          $apiClient->leads()->update($leadsCollectionAll);
+      } catch (AmoCRM\Exceptions\AmoCRMApiException $e) {
+          printError($e);
+          die;
+      }
   }
+  //    у нас уже есть готовые ответы от сервера по сущностям, так что добавляем контакты к сделке
+//  $links = new AmoCRM\Collections\LinksCollection();
+//  $count = count($leadsCollectionAll);
+//  foreach ($leadsCollectionAll as $index => $model) {
+//
+//  }
+//  for ($i=0;$i<$count; $i++){
+//      $links->add($contactCollectionsAll[$i]);
+//      try {
+//          $apiClient->leads()->link($leadsCollectionAll[$i], $links);
+//      } catch (AmoCRM\Exceptions\AmoCRMApiException $e) {
+//          printError($e);
+//          die;
+//      }
+//      $links->add($companiesCollectionAll[$i]);
+//      try {
+//          $apiClient->leads()->link($leadsCollectionAll[$i], $links);
+//      } catch (AmoCRM\Exceptions\AmoCRMApiException $e) {
+//          printError($e);
+//          die;
+//      }
+//  }
+//  try {
+//      $apiClient->leads()->update($leadsCollectionAll);
+//  } catch (AmoCRM\Exceptions\AmoCRMApiException $e) {
+//      printError($e);
+//      die;
+//  }
+//      for ($c=0; $c<4 ; $c++) {
+//      $companiesCollection = new AmoCRM\Collections\CompaniesCollection();
+//      for ($i = 0; $i < 250; $i++) {
+//          $company = new AmoCRM\Models\CompanyModel();
+//          $company->setName("Roga&Copita $c $i");
+//          $company->setID($i);
+//          $companiesCollection->add($company);
+//      }
+//      try {
+//          $apiClient->companies()->add($companiesCollection);
+//      } catch (AmoCRMApiException $e) {
+//          printError($e);
+//      }
+//  }
+//
+//  for ($c=0; $c<4 ; $c++) {
+//      $leadsCollection = new AmoCRM\Collections\Leads\LeadsCollection();
+//      for ($i = 0; $i < 250; $i++) {
+//          $lead = new AmoCRM\Models\LeadModel();
+//          $lead->setName('Example $c.$i');
+//          $lead->setID($i);
+//          $leadsCollection->add($lead);
+//      }
+//      try {
+//          $apiClient->leads()->add($leadsCollection);
+//      } catch (AmoCRMApiException $e) {
+//          printError($e);
+//          die;
+//      }
+//  }
   ?>
 
 </body>
