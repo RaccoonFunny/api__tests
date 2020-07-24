@@ -12,7 +12,7 @@
         .wrapper{
             display: flex;
             flex-direction: column;
-            width: 720px;
+            width: 1000px;
             justify-content: space-between;
             margin: 0 auto;
         }
@@ -20,6 +20,10 @@
             font-family: "TT Firs Neue DemiBold";
             font-size: 36px;
             color: #ab00ea;
+        }
+        .row{
+            width:100px;
+            margin-top: 20px;
         }
     </style>
 </head>
@@ -32,6 +36,10 @@
   $AuthCode= htmlspecialchars($_GET["code"]);
   $user= htmlspecialchars($_GET["referer"]);
   $clientId= htmlspecialchars($_GET["client_id"]);
+  //
+  //Важные переменные
+  const QUANTITY = 10;//Сколько всего нужно сущностей каждого типа
+  const CLUSTER = 10;//Пак сущностей, не должен превышать 250
   //
   echo "<h3>".$user."</h3>";
   $subdomain = $user; //Поддомен нужного аккаунта
@@ -151,17 +159,48 @@
   ->setAccountBaseDomain($subdomain);
 
   $id = 1;
+  $id_last= 0;
   $contactCollectionsAll = new AmoCRM\Collections\ContactsCollection();
   $companiesCollectionAll = new AmoCRM\Collections\CompaniesCollection();
   $leadsCollectionAll = new AmoCRM\Collections\Leads\LeadsCollection();
 
-  for ($c=0; $c<4 ; $c++) {
+  //Создадим мультисписок
+  $cf = new AmoCRM\Models\CustomFields\MultiselectCustomFieldModel();
+  $cf-> setName("Мультисписочек");
+  $cf->setEnums(
+      (new AmoCRM\Collections\CustomFields\CustomFieldEnumsCollection())
+          ->add(
+              (new AmoCRM\Models\CustomFields\EnumModel())
+                  ->setValue('Попытка 4')
+                  ->setSort(10)
+          )
+          ->add(
+              (new AmoCRM\Models\CustomFields\EnumModel())
+                  ->setValue('Попытка 4.2')
+                  ->setSort(20)
+          )
+          ->add(
+              (new AmoCRM\Models\CustomFields\EnumModel())
+                  ->setValue('Шооон!')
+                  ->setSort(30)
+          )
+  );
+//  внесём наш мультисписок в аккаунт
+  $customFieldsCollection = new \AmoCRM\Collections\CustomFields\CustomFieldsCollection();
+  $customFieldsCollection-> add($cf);
+//  Создаём службу кастомных полей
+  $customFieldsService = $apiClient->customFields(AmoCRM\Helpers\EntityTypesInterface::CONTACTS);
+//  Добавим поля в аккаунт
+  $cf = $customFieldsService->addOne($cf);
+$qc = QUANTITY/CLUSTER;
+  for ($c=0; $c<$qc ; $c++) {
+//      объявим коллекции
       $contactCollections = new AmoCRM\Collections\ContactsCollection();
       $companiesCollection = new AmoCRM\Collections\CompaniesCollection();
       $leadsCollection = new AmoCRM\Collections\Leads\LeadsCollection();
+//      создаём контакты компании и сделки
+      for ($i = 0; $i < CLUSTER; $i++) {
 
-      for ($i = 0; $i < 10; $i++) {
-          // code...
           $contact = new AmoCRM\Models\ContactModel();
           $contact->setName("Бот $id");
           $contact->setFirstName("Example contact $id");
@@ -195,14 +234,16 @@
       } catch (AmoCRM\Exceptions\AmoCRMApiException $e) {
           printError($e);
       }
-      $links = new AmoCRM\Collections\LinksCollection();
-      for ($f=0;$f<10; $f++){
+      //привязываем к сделке контакты
+      for ($f=0;$f<CLUSTER; $f++){
+          $links = new AmoCRM\Collections\LinksCollection();
           $links->add($contactCollectionsAll[$f]);
           try {
               $apiClient->leads()->link($leadsCollectionAll[$f], $links);
           } catch (AmoCRM\Exceptions\AmoCRMApiException $e) {
               printError($e);
           }
+//      привязываем к сделке компании
           $links->add($companiesCollectionAll[$f]);
           try {
               $apiClient->leads()->link($leadsCollectionAll[$f], $links);
@@ -210,63 +251,60 @@
               printError($e);
           }
       }
+      //обновляем сделки в CRM
       try {
           $apiClient->leads()->update($leadsCollectionAll);
       } catch (AmoCRM\Exceptions\AmoCRMApiException $e) {
           printError($e);
       }
-  }
 
 
-  $contactFilter = new AmoCRM\Filters\ContactsFilter();
-  $contactFilter->setIds([1, 5170965]);
-  $companyFilter= new AmoCRM\Filters\CompaniesFilter();
-  $companyFilter->setIds([1,5170965]);
-  $leadsFilter = new AmoCRM\Filters\LeadsFilter();
-  $leadsFilter -> setIds([1, 5170956]);
-  //Создадим мультисписок
-  $cf = new AmoCRM\Models\CustomFields\MultiselectCustomFieldModel();
-  $cf-> setName("Мультисписок");
-  $cf->setEnums(
-      (new AmoCRM\Collections\CustomFields\CustomFieldEnumsCollection())
-          ->add(
-              (new AmoCRM\Models\CustomFields\EnumModel())
-                  ->setValue('Значение 1')
-                  ->setSort(10)
-          )
-          ->add(
-              (new AmoCRM\Models\CustomFields\EnumModel())
-                  ->setValue('Значение 2')
-                  ->setSort(20)
-          )
-          ->add(
-              (new AmoCRM\Models\CustomFields\EnumModel())
-                  ->setValue('Значение 3')
-                  ->setSort(30)
-          )
-  );
 
-  try {
-      //Забираем из базы все контакты с ID от 1 до 5170965
-      $contactConnect = $apiClient->leads()->get($contactFilter,[]);
-      //проходим по всей коллекции и добавляем ей поле мультисписок
-      for ($i=0;$i<40;$i++) {
-          $customFields = $contactConnect[$i] ->getCustomFieldsValues();
-          $customFields->add($cf);
+      //Запускае циклом внесение кастомных полей в наши контакты
+      //$CustomFieldValue - модель значений поля
+      //$customFieldsCollection - коллекция значений
+      while ($id_last<($id-1)) {
+          $customFieldValue = new \AmoCRM\Models\CustomFieldsValues\MultiselectCustomFieldValuesModel;
+          $customFieldsValueCollection = new \AmoCRM\Collections\CustomFieldsValuesCollection;
+          $customFieldValue -> setFieldId($cf->getID());
+          $enumsCollection = $cf->getEnums();
+          var_dump($enumsCollection[rand(0,count($enumsCollection))]->getID());
+          $customFieldValue -> setValues(
+              (new AmoCRM\Models\CustomFieldsValues\ValueCollections\MultiselectCustomFieldValueCollection)
+                  ->add((new AmoCRM\Models\CustomFieldsValues\ValueModels\MultiselectCustomFieldValueModel())
+                      ->setEnumId($enumsCollection[rand(0,count($enumsCollection))]->getID())
+                      ));
           try {
-              $apiClient->contacts()->updateOne($contactConnect[$i]);
-          } catch (AmoCRMApiException $e) {
+              var_dump($contactCollectionsAll[$id_last]);
+              $contactCollectionsAll[$id_last]->setCustomFieldsValues($customFieldsValueCollection);
+          } catch (AmoCRM\Exceptions\AmoCRMApiException $e) {
               printError($e);
               die;
           }
+          $id_last++;
       }
-  } catch (AmoCRM\Exceptions\AmoCRMApiException $e) {
-      printError($e);
-      die;
   }
 
 
   ?>
+    <div class="row">
+        <h2>Контакты которые мы подключили</h2>
+        <?php
+        echo "<table> <tr><th>Имя</th><th>Фамилия</th></tr>";
+        foreach ($apiClient->contacts()->get(null, []) as $item){
+            echo "<td><td>".$item->getName()."</td><td>".$item->getFirstName()."</td>".$item->getLastName()."</tr></table>";
+        }
+        echo "<h2>Компании которые мы подключили</h2>";
+        foreach ($apiClient->companies()->get(null, []) as $item){
+            echo "<p>Название фирмы".$item->getName()."</p>";
+        }
+        echo "<h2>Сделки которые мы Начали</h2>";
+        foreach ($apiClient->companies()->get(null, []) as $item){
+            echo "<p>Название Сделки".$item->getName()."</p>";
+        }
+        ?>
+    </div>
+
 </div>
 </body>
 </html>
