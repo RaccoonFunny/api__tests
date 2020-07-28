@@ -1,3 +1,103 @@
+<?php
+
+use AmoCRM\OAuth\OAuthServise;
+use AmoCRM\OAuth\OAuthConfig;
+use AmoCRM\Collections\ContactsCollection;
+use AmoCRM\Collections\CompaniesCollection;
+use AmoCRM\Collections\Leads\LeadsCollection;
+use AmoCRM\Helpers\EntityTypesInterface;
+use AmoCRM\Collections\CustomFields\CustomFieldsCollection;
+use League\OAuth2\Client\Token\AccessToken;
+use AmoCRM\AmoCRM\Client\AmoCRMApiClientFactory;
+use AmoCRM\Client\AmoCRMApiClient;
+use AmoCRM\Models\CustomFields\MultiselectCustomFieldModel;
+use AmoCRM\Collections\CustomFields\CustomFieldEnumsCollection;
+use AmoCRM\Models\CustomFields\EnumModel;
+use AmoCRM\Exceptions\AmoCRMApiException;
+use AmoCRM\Models\CustomFieldsValues\MultiselectCustomFieldValuesModel;
+use AmoCRM\Collections\CustomFieldsValuesCollection;
+use AmoCRM\Models\CustomFieldsValues\ValueCollections\MultiselectCustomFieldValueCollection;
+use AmoCRM\Models\CustomFieldsValues\ValueModels\MultiselectCustomFieldValueModel;
+use AmoCRM\Collections\LinksCollection;
+use AmoCRM\Models\ContactModel;
+use AmoCRM\Models\CompanyModel;
+use AmoCRM\Models\LeadModel;
+
+session_start();
+
+require 'vendor/autoload.php';
+require "vendor/amocrm/amocrm-api-library/examples/error_printer.php";
+
+spl_autoload_register(function ($className) {
+    include $className . '.php';
+});
+
+const CLIENT_ID = "7c2fc1ac-4f40-477b-8d15-bc307350293e";
+const CLIENT_SECRET = "l400pgDgV1rlR09A7Oj8JQVZpF8Q3x5hnHf6Ro8OwiioXCyIoeosDTYxvCIw8GnD";
+const REDIRECT_URL = "https://koltashov-webdev.ru";
+
+
+// принимаем переменные от сайта с интеграцией
+
+$oAuthConfig = new OAuthConfig(REDIRECT_URL);
+$oAuthService = new OAuthServise();
+
+$apiClientFactory = new AmoCRMApiClientFactory($oAuthConfig, $oAuthService);
+
+$apiClient = $apiClientFactory->make();
+
+if (isset($_GET['referer'])) {
+    $apiClient->setAccountBaseDomain($_GET['referer']);
+}
+
+
+if (!isset($_GET['code'])) {
+    $state = bin2hex(random_bytes(16));
+    $_SESSION['oauth2state'] = $state;
+    if (isset($_GET['button'])) {
+        echo $apiClient->getOAuthClient()->getOAuthButton(
+            [
+                'title' => 'Установить интеграцию',
+                'compact' => true,
+                'class_name' => 'className',
+                'color' => 'default',
+                'error_callback' => 'handleOauthError',
+                'state' => $state,
+            ]
+        );
+        die;
+    } else {
+        $authorizationUrl = $apiClient->getOAuthClient()->getAuthorizeUrl([
+            'state' => $state,
+            'mode' => 'post_message',
+        ]);
+        header('Location: ' . $authorizationUrl);
+        die;
+    }
+} elseif (empty($_GET['state']) || empty($_SESSION['oauth2state']) || ($_GET['state'] !== $_SESSION['oauth2state'])) {
+    var_dump($_SESSION);
+    var_dump($_GET["state"]);
+    unset($_SESSION['oauth2state']);
+    exit('Invalid state');
+}
+
+/**
+ * Ловим обратный код
+ */
+try {
+    $accessToken = $apiClient->getOAuthClient()->getAccessTokenByCode($_GET['code']);
+} catch (Exception $e) {
+    die((string)$e);
+}
+
+$ownerDetails = $apiClient->getOAuthClient()->getResourceOwner($accessToken);
+$subdomain = $apiClient->getOAuthClient()->getAccountDomain($accessToken)->getDomain();
+
+$apiClient->setAccessToken($accessToken)
+    ->setAccountBaseDomain($subdomain);
+printf('Hello, %s!', $ownerDetails->getName());
+?>
+
 <!DOCTYPE html>
 <html lang="ru" dir="ltr">
 <head>
@@ -29,133 +129,18 @@
 <body>
 <div class="wrapper">
     <?php
-
-    use AmoCRM\OAuth\OAuthServise;
-    use AmoCRM\OAuth\OAuthConfig;
-    use AmoCRM\Collections\ContactsCollection;
-    use AmoCRM\Collections\CompaniesCollection;
-    use AmoCRM\Collections\Leads\LeadsCollection;
-    use AmoCRM\Helpers\EntityTypesInterface;
-    use AmoCRM\Collections\CustomFields\CustomFieldsCollection;
-    use League\OAuth2\Client\Token\AccessToken;
-    use \AmoCRM\AmoCRM\Client\AmoCRMApiClientFactory;
-    use AmoCRM\Client\AmoCRMApiClient;
-    use AmoCRM\Models\CustomFields\MultiselectCustomFieldModel;
-    use AmoCRM\Collections\CustomFields\CustomFieldEnumsCollection;
-    use AmoCRM\Models\CustomFields\EnumModel;
-    use AmoCRM\Exceptions\AmoCRMApiException;
-    use \AmoCRM\Models\CustomFieldsValues\MultiselectCustomFieldValuesModel;
-    use \AmoCRM\Collections\CustomFieldsValuesCollection;
-    use AmoCRM\Models\CustomFieldsValues\ValueCollections\MultiselectCustomFieldValueCollection;
-    use AmoCRM\Models\CustomFieldsValues\ValueModels\MultiselectCustomFieldValueModel;
-    use AmoCRM\Collections\LinksCollection;
-    use AmoCRM\Models\ContactModel;
-    use AmoCRM\Models\CompanyModel;
-    use AmoCRM\Models\LeadModel;
-
-    require 'vendor/autoload.php';
-    spl_autoload_register(function ($class_name) {
-        include $class_name . '.php';
-    });
-
-    // принимаем переменные от сайта с интеграцией
-    $AuthCode = htmlspecialchars($_GET["code"]);
-    $user = htmlspecialchars($_GET["referer"]);
-    $clientId = htmlspecialchars($_GET["client_id"]);
-
-    //Константы которые изменяют размер пака и всего сущьностей
-    const QUANTITY = 1000;//Сколько всего нужно сущностей каждого типа
-    const CLUSTER = 250;//Пак сущностей, не должен превышать 250
+    //Константы которые изменяют размер пака и всего сущностей
+    const QUANTITY = 10;//Сколько всего нужно сущностей каждого типа
+    const CLUSTER = 10;//Пак сущностей, не должен превышать 250
 
     echo "<h3> Спасибо за ожидние " . $user . " <br> Все сущности добавленны</h3>";
     $subdomain = $user; //Поддомен нужного аккаунта
     $link = 'https://' . $subdomain . '/oauth2/access_token'; //Формируем URL для запроса
 
-    /** Соберем данные для запроса */
-    $data = [
-        'client_id' => '7c2fc1ac-4f40-477b-8d15-bc307350293e',
-        'client_secret' => 'l400pgDgV1rlR09A7Oj8JQVZpF8Q3x5hnHf6Ro8OwiioXCyIoeosDTYxvCIw8GnD',
-        'grant_type' => 'authorization_code',
-        'code' => $_GET["code"],
-        'redirect_uri' => 'https://koltashov-webdev.ru',
-    ];
-    /**
-     * Нам необходимо инициировать запрос к серверу.
-     * Воспользуемся библиотекой cURL (поставляется в составе PHP).
-     * Вы также можете использовать и кроссплатформенную программу cURL, если вы не программируете на PHP.
-     */
-    $curl = curl_init(); //Сохраняем дескриптор сеанса cURL
-    /** Устанавливаем необходимые опции для сеанса cURL  */
-    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($curl, CURLOPT_USERAGENT, 'amoCRM-oAuth-client/1.0');
-    curl_setopt($curl, CURLOPT_URL, $link);
-    curl_setopt($curl, CURLOPT_HTTPHEADER, ['Content-Type:application/json']);
-    curl_setopt($curl, CURLOPT_HEADER, false);
-    curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'POST');
-    curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($data));
-    curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 1);
-    curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 2);
-    $out = curl_exec($curl); //Инициируем запрос к API и сохраняем ответ в переменную
-    $code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-    curl_close($curl);
-    /** Теперь мы можем обработать ответ, полученный от сервера. Это пример. Вы можете обработать данные своим способом. */
-    $code = (int)$code;
-    $errors = [
-        400 => 'Bad request',
-        401 => 'Unauthorized',
-        403 => 'Forbidden',
-        404 => 'Not found',
-        500 => 'Internal server error',
-        502 => 'Bad gateway',
-        503 => 'Service unavailable',
-    ];
-
-    try {
-        /** Если код ответа не успешный - возвращаем сообщение об ошибке  */
-        if ($code < 200 || $code > 204) {
-            throw new Exception(isset($errors[$code]) ? $errors[$code] : 'Undefined error', $code);
-        }
-    } catch (Exception $e) {
-        die('Ошибка: ' . $e->getMessage() . PHP_EOL . 'Код ошибки: ' . $e->getCode());
-    }
-
-    /**
-     * Данные получаем в формате JSON, поэтому, для получения читаемых данных,
-     * нам придётся перевести ответ в формат, понятный PHP
-     */
-
-    $response = json_decode($out, true);
-
-    $access_token = $response['access_token']; //Access токен
-    $refresh_token = $response['refresh_token']; //Refresh токен
-    $token_type = $response['token_type']; //Тип токена
-    $expires_in = $response['expires_in']; //Через сколько действие токена истекает
-    //Окончание работы с oAuth 2.0
-    //Начало работы с API
-    require 'vendor/autoload.php';
-    $apiClient = new AmoCRMApiClient ("7c2fc1ac-4f40-477b-8d15-bc307350293e", "l400pgDgV1rlR09A7Oj8JQVZpF8Q3x5hnHf6Ro8OwiioXCyIoeosDTYxvCIw8GnD", "https://koltashov-webdev.ru");
-
-    $oAuthConfig = new OAuthConfig($subdomain);
-    $oAuthService = new OAuthServise();
-
-    $apiClientFactory = new AmoCRMApiClientFactory($oAuthConfig, $oAuthService);
-    $apiClient = $apiClientFactory->make();
-
-
-    $apiClient = $apiClientFactory->make();
-
-    $accessTk = new AccessToken($response);
-
-    $subdomain = explode(".", $subdomain);
-    $subdomain = $subdomain[0];
-    $subdomain = $subdomain . ".amocrm.ru";
-
-    $apiClient->setAccessToken($accessTk)
-        ->setAccountBaseDomain($subdomain);
     // счётчик наших сущностей показывает на каком этапе была созданна
-    $id = 1;
+    $id = 0;
     // Счётчик последней обновлённой сущности
-    $id_last = 0;
+    $idLast = 0;
     //Создаём коллекции всех Контактов, Компаний и Сделок
     $contactCollectionsAll = new ContactsCollection();
     $companiesCollectionAll = new CompaniesCollection();
@@ -221,16 +206,19 @@
             $contactCollectionsAll = $apiClient->contacts()->add($contactCollections);
         } catch (AmoCRMApiException $e) {
             printError($e);
+            die;
         }
         try {
             $companiesCollectionAll = $apiClient->companies()->add($companiesCollection);
         } catch (AmoCRMApiException $e) {
             printError($e);
+            die;
         }
         try {
             $leadsCollectionAll = $apiClient->leads()->add($leadsCollection);
         } catch (AmoCRMApiException $e) {
             printError($e);
+            die;
         }
         //привязываем к сделке контакты
         for ($f = 0; $f < CLUSTER; $f++) {
@@ -240,6 +228,7 @@
                 $apiClient->leads()->link($leadsCollectionAll[$f], $links);
             } catch (AmoCRMApiException $e) {
                 printError($e);
+                die;
             }
 //      привязываем к сделке компании
             $links->add($companiesCollectionAll[$f]);
@@ -247,6 +236,7 @@
                 $apiClient->leads()->link($leadsCollectionAll[$f], $links);
             } catch (AmoCRMApiException $e) {
                 printError($e);
+                die;
             }
         }
         //обновляем сделки в CRM
@@ -254,36 +244,37 @@
             $apiClient->leads()->update($leadsCollectionAll);
         } catch (AmoCRMApiException $e) {
             printError($e);
+            die;
         }
 
 
         //Запускае циклом внесение кастомных полей в наши контакты
         //$CustomFieldValue - модель значений поля
         //$customFieldsCollection - коллекция значений
-
-        while ($id_last < ($id - 1)) {
-            $customFieldValue = new MultiselectCustomFieldValuesModel();
+        while ($idLast != $id - 1) {
+            $customFieldValue = new MultiselectCustomFieldValuesModel;
             $customFieldsValueCollection = new CustomFieldsValuesCollection;
             $customFieldValue->setFieldId($cf->getID());
             $enumsCollection = $cf->getEnums();
-            var_dump($enumsCollection[rand(0, count($enumsCollection))]->getID());
             $customFieldValue->setValues(
-
                 (new MultiselectCustomFieldValueCollection())
                     ->add((new MultiselectCustomFieldValueModel())
                         ->setEnumId($enumsCollection[rand(0, count($enumsCollection))]->getID())
                     ));
             try {
-                var_dump($contactCollectionsAll[$id_last]);
-                $contactCollectionsAll[$id_last]->setCustomFieldsValues($customFieldsValueCollection);
+                var_dump($contactCollectionsAll[$idLast]);
+                var_dump($id);
+                var_dump($idLast);
+                $contactCollectionsAll[$idLast]->setCustomFieldsValues($customFieldsValueCollection);
             } catch (AmoCRMApiException $e) {
                 printError($e);
                 die;
             }
-            $id_last++;
+            $idLast++;
         }
     }
 
+    require "printObj.php";
     ?>
 </div>
 </body>
