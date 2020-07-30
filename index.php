@@ -1,28 +1,27 @@
 <?php
 
-use AmoCRM\OAuth\OAuthServise;
+
+use AmoCRM\OAuth\OAuthService;
 use AmoCRM\OAuth\OAuthConfig;
 use AmoCRM\AmoCRM\Client\AmoCRMApiClientFactory;
 use AmoCRM\Client\AmoCRMApiClient;
-
+use Application\Controllers\Controller;
 session_start();
+
 require 'vendor/autoload.php';
+require "vendor/amocrm/amocrm-api-library/examples/error_printer.php";
 
-const CLIENT_ID = "7c2fc1ac-4f40-477b-8d15-bc307350293e";
-const CLIENT_SECRET = "l400pgDgV1rlR09A7Oj8JQVZpF8Q3x5hnHf6Ro8OwiioXCyIoeosDTYxvCIw8GnD";
-const REDIRECT_URL = "https://koltashov-webdev.ru";
+spl_autoload_register(function ($className) {
+    include __DIR__ . "/" . str_replace('\\', '/', $className). '.php';
+});
 
-
-// принимаем переменные от сайта с интеграцией
-$AuthCode = htmlspecialchars($_GET["code"]);
-$subdomain = htmlspecialchars($_GET["referer"]);
-$clientId = htmlspecialchars($_GET["client_id"]);
-
-$oAuthConfig = new OAuthConfig(REDIRECT_URL);
-$oAuthService = new OAuthServise();
-
+$oAuthConfig= new OAuthConfig();
+$oAuthService = new OAuthService();
+$oAuthConfig->setIntegrationId("7c2fc1ac-4f40-477b-8d15-bc307350293e");
+$oAuthConfig->setRedirectDomain("https://koltashov-webdev.ru");
+$oAuthConfig->setSecretKey("l400pgDgV1rlR09A7Oj8JQVZpF8Q3x5hnHf6Ro8OwiioXCyIoeosDTYxvCIw8GnD");
+$apiClient = new AmoCRMApiClient($oAuthConfig->getIntegrationId(),$oAuthConfig->getSecretKey(),$oAuthConfig->getRedirectDomain());
 $apiClientFactory = new AmoCRMApiClientFactory($oAuthConfig, $oAuthService);
-
 $apiClient = $apiClientFactory->make();
 
 if (isset($_GET['referer'])) {
@@ -54,10 +53,8 @@ if (!isset($_GET['code'])) {
         die;
     }
 } elseif (empty($_GET['state']) || empty($_SESSION['oauth2state']) || ($_GET['state'] !== $_SESSION['oauth2state'])) {
-    var_dump($_SESSION);
-    var_dump($_GET["state"]);
     unset($_SESSION['oauth2state']);
-    exit('Invalid state');
+    exit('Invalid state, please reconnect to the server');
 }
 
 /**
@@ -65,10 +62,9 @@ if (!isset($_GET['code'])) {
  */
 try {
     $accessToken = $apiClient->getOAuthClient()->getAccessTokenByCode($_GET['code']);
+    $apiClient->setAccessToken($accessToken);
 } catch (Exception $e) {
     die((string)$e);
 }
-
-$ownerDetails = $apiClient->getOAuthClient()->getResourceOwner($accessToken);
-
-printf('Hello, %s!', $ownerDetails->getName());
+$controller = new Controller;
+$controller->testApi($apiClient);

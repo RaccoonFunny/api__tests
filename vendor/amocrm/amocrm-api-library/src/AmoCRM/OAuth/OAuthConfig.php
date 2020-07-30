@@ -1,32 +1,52 @@
 <?php
 
 
-namespace AmoCRM\OAuth\;
+namespace AmoCRM\OAuth;
 
 
-class OAuthConfig implements \AmoCRM\OAuth\OAuthConfigInterface
+class OAuthConfig implements OAuthConfigInterface
 {
-    protected $access_Token;
 
-    public function getIntegrationId(): string
+    public $integrationId;
+    public $secretKey;
+    public $redirectDomain;
 
+    public function setIntegrationId($integrationId)
     {
-        return "7c2fc1ac-4f40-477b-8d15-bc307350293e";
+        $this->integrationId =$integrationId;
     }
 
+    public function setSecretKey($secretKey)
+    {
+        $this->secretKey =$secretKey;
+    }
+
+    public function setRedirectDomain($redirectDomain)
+    {
+        $this->redirectDomain =$redirectDomain;
+    }
+
+    /**
+     * @return string
+     */
+    public function getIntegrationId(): string
+    {
+        return $this->integrationId;
+    }
+
+    /**
+     * @return string
+     */
     public function getSecretKey(): string
     {
-        return "l400pgDgV1rlR09A7Oj8JQVZpF8Q3x5hnHf6Ro8OwiioXCyIoeosDTYxvCIw8GnD";
+        return $this->secretKey;
     }
 
+    /**
+     * @return string
+     */
     public function getRedirectDomain(): string
     {
-        return $this->access_Token;
+        return $this->redirectDomain;
     }
-
-    public function __construct($access_t)
-    {
-        $this->access_Token = $access_t;
-    }
-
 }
