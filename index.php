@@ -6,21 +6,22 @@ use AmoCRM\OAuth\OAuthConfig;
 use AmoCRM\AmoCRM\Client\AmoCRMApiClientFactory;
 use AmoCRM\Client\AmoCRMApiClient;
 use Application\Controllers\Controller;
+
 session_start();
 
 require 'vendor/autoload.php';
 require "vendor/amocrm/amocrm-api-library/examples/error_printer.php";
 
 spl_autoload_register(function ($className) {
-    include __DIR__ . "/" . str_replace('\\', '/', $className). '.php';
+    include __DIR__ . "/" . str_replace('\\', '/', $className) . '.php';
 });
 
-$oAuthConfig= new OAuthConfig();
+$oAuthConfig = new OAuthConfig();
 $oAuthService = new OAuthService();
 $oAuthConfig->setIntegrationId("7c2fc1ac-4f40-477b-8d15-bc307350293e");
 $oAuthConfig->setRedirectDomain("https://koltashov-webdev.ru");
 $oAuthConfig->setSecretKey("l400pgDgV1rlR09A7Oj8JQVZpF8Q3x5hnHf6Ro8OwiioXCyIoeosDTYxvCIw8GnD");
-$apiClient = new AmoCRMApiClient($oAuthConfig->getIntegrationId(),$oAuthConfig->getSecretKey(),$oAuthConfig->getRedirectDomain());
+$apiClient = new AmoCRMApiClient($oAuthConfig->getIntegrationId(), $oAuthConfig->getSecretKey(), $oAuthConfig->getRedirectDomain());
 $apiClientFactory = new AmoCRMApiClientFactory($oAuthConfig, $oAuthService);
 $apiClient = $apiClientFactory->make();
 
@@ -66,5 +67,5 @@ try {
 } catch (Exception $e) {
     die((string)$e);
 }
-$controller = new Controller;
+$controller = new Controller();
 $controller->testApi($apiClient);

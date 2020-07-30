@@ -29,7 +29,7 @@
 <body>
 <div class="wrapper">
     <?php
-        include "printer.php"
+    include "printer.php"
     ?>
 </div>
 </body>

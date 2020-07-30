@@ -322,7 +322,7 @@ class Model
             $leads = $this->sendLeadsCluster($apiClient, $this->createLeadsCluster());
             $this->linkContact($leads, $contacts, $companies, $apiClient);
             $cf = $this->createMultiselect($apiClient);
-            $this->linkMultiselect($cf,$contacts);
+            $this->linkMultiselect($cf, $contacts);
         }
     }
 }

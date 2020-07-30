@@ -11,14 +11,15 @@ class View
     {
         echo "<div style='color:#" . rand(0, 9) . rand(0, 9) . rand(0, 9) . "'>";
         echo "<h3>$title</h3>";
-        foreach ($essence as $item){
+        foreach ($essence as $item) {
             echo "<p>" . $item->getName() . "</p>";
         }
 
         echo "</div>";
     }
 
-    public function generate($contact, $companies, $leads){
+    public function generate($contact, $companies, $leads)
+    {
         include "template.php";
 
     }
