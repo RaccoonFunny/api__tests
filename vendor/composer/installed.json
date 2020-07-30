@@ -1,17 +1,17 @@
 [
     {
         "name": "amocrm/amocrm-api-library",
-        "version": "0.3.4",
-        "version_normalized": "0.3.4.0",
+        "version": "0.3.5",
+        "version_normalized": "0.3.5.0",
         "source": {
             "type": "git",
             "url": "https://github.com/amocrm/amocrm-api-php.git",
-            "reference": "63ee7c93b5616af9b45cad4f0158c6ba816e8f00"
+            "reference": "99c57af1782de66c48022ee25ebe5ed7234b695c"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/amocrm/amocrm-api-php/zipball/63ee7c93b5616af9b45cad4f0158c6ba816e8f00",
-            "reference": "63ee7c93b5616af9b45cad4f0158c6ba816e8f00",
+            "url": "https://api.github.com/repos/amocrm/amocrm-api-php/zipball/99c57af1782de66c48022ee25ebe5ed7234b695c",
+            "reference": "99c57af1782de66c48022ee25ebe5ed7234b695c",
             "shasum": ""
         },
         "require": {
@@ -29,7 +29,7 @@
             "phpunit/phpunit": "7.*.*",
             "squizlabs/php_codesniffer": "3.5.*"
         },
-        "time": "2020-07-13T15:46:09+00:00",
+        "time": "2020-07-22T17:26:31+00:00",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -517,8 +517,8 @@
     },
     {
         "name": "illuminate/contracts",
-        "version": "v7.21.0",
-        "version_normalized": "7.21.0.0",
+        "version": "v7.22.4",
+        "version_normalized": "7.22.4.0",
         "source": {
             "type": "git",
             "url": "https://github.com/illuminate/contracts.git",
@@ -563,17 +563,17 @@
     },
     {
         "name": "illuminate/support",
-        "version": "v7.21.0",
-        "version_normalized": "7.21.0.0",
+        "version": "v7.22.4",
+        "version_normalized": "7.22.4.0",
         "source": {
             "type": "git",
             "url": "https://github.com/illuminate/support.git",
-            "reference": "79bbfdf2cd58a3ca2daa015e523a8e0351cccd01"
+            "reference": "138d67507a697c3fff06710af2df7452d0fafb09"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/illuminate/support/zipball/79bbfdf2cd58a3ca2daa015e523a8e0351cccd01",
-            "reference": "79bbfdf2cd58a3ca2daa015e523a8e0351cccd01",
+            "url": "https://api.github.com/repos/illuminate/support/zipball/138d67507a697c3fff06710af2df7452d0fafb09",
+            "reference": "138d67507a697c3fff06710af2df7452d0fafb09",
             "shasum": ""
         },
         "require": {
@@ -596,7 +596,7 @@
             "symfony/var-dumper": "Required to use the dd function (^5.0).",
             "vlucas/phpdotenv": "Required to use the Env class and env helper (^4.0)."
         },
-        "time": "2020-07-17T14:27:04+00:00",
+        "time": "2020-07-27T17:48:28+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -763,17 +763,17 @@
     },
     {
         "name": "nesbot/carbon",
-        "version": "2.36.1",
-        "version_normalized": "2.36.1.0",
+        "version": "2.37.0",
+        "version_normalized": "2.37.0.0",
         "source": {
             "type": "git",
             "url": "https://github.com/briannesbitt/Carbon.git",
-            "reference": "ee7378a36cc62952100e718bcc58be4c7210e55f"
+            "reference": "1f61206de973d67f36ce50f041c792ddac663c3e"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/briannesbitt/Carbon/zipball/ee7378a36cc62952100e718bcc58be4c7210e55f",
-            "reference": "ee7378a36cc62952100e718bcc58be4c7210e55f",
+            "url": "https://api.github.com/repos/briannesbitt/Carbon/zipball/1f61206de973d67f36ce50f041c792ddac663c3e",
+            "reference": "1f61206de973d67f36ce50f041c792ddac663c3e",
             "shasum": ""
         },
         "require": {
@@ -792,7 +792,7 @@
             "phpunit/phpunit": "^7.5 || ^8.0",
             "squizlabs/php_codesniffer": "^3.4"
         },
-        "time": "2020-07-04T12:29:56+00:00",
+        "time": "2020-07-28T06:04:54+00:00",
         "bin": [
             "bin/carbon"
         ],
@@ -1159,17 +1159,17 @@
     },
     {
         "name": "ramsey/uuid",
-        "version": "4.0.1",
-        "version_normalized": "4.0.1.0",
+        "version": "4.1.0",
+        "version_normalized": "4.1.0.0",
         "source": {
             "type": "git",
             "url": "https://github.com/ramsey/uuid.git",
-            "reference": "ba8fff1d3abb8bb4d35a135ed22a31c6ef3ede3d"
+            "reference": "988dbefc7878d0a35f12afb4df1f7dd0bd153c43"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/ramsey/uuid/zipball/ba8fff1d3abb8bb4d35a135ed22a31c6ef3ede3d",
-            "reference": "ba8fff1d3abb8bb4d35a135ed22a31c6ef3ede3d",
+            "url": "https://api.github.com/repos/ramsey/uuid/zipball/988dbefc7878d0a35f12afb4df1f7dd0bd153c43",
+            "reference": "988dbefc7878d0a35f12afb4df1f7dd0bd153c43",
             "shasum": ""
         },
         "require": {
@@ -1184,7 +1184,7 @@
         },
         "require-dev": {
             "codeception/aspect-mock": "^3",
-            "dealerdirect/phpcodesniffer-composer-installer": "^0.6.2",
+            "dealerdirect/phpcodesniffer-composer-installer": "^0.6.2 || ^0.7.0",
             "doctrine/annotations": "^1.8",
             "goaop/framework": "^2",
             "mockery/mockery": "^1.3",
@@ -1193,8 +1193,8 @@
             "php-mock/php-mock-mockery": "^1.3",
             "php-mock/php-mock-phpunit": "^2.5",
             "php-parallel-lint/php-parallel-lint": "^1.1",
+            "phpbench/phpbench": "^0.17.1",
             "phpstan/extension-installer": "^1.0",
-            "phpstan/phpdoc-parser": "0.4.3",
             "phpstan/phpstan": "^0.12",
             "phpstan/phpstan-mockery": "^0.12",
             "phpstan/phpstan-phpunit": "^0.12",
@@ -1212,7 +1212,7 @@
             "paragonie/random-lib": "Provides RandomLib for use with the RandomLibAdapter",
             "ramsey/uuid-doctrine": "Allows the use of Ramsey\\Uuid\\Uuid as Doctrine field type."
         },
-        "time": "2020-03-29T20:13:32+00:00",
+        "time": "2020-07-28T16:51:01+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -1314,8 +1314,8 @@
     },
     {
         "name": "symfony/dotenv",
-        "version": "v5.1.2",
-        "version_normalized": "5.1.2.0",
+        "version": "v5.1.3",
+        "version_normalized": "5.1.3.0",
         "source": {
             "type": "git",
             "url": "https://github.com/symfony/dotenv.git",
@@ -1951,17 +1951,17 @@
     },
     {
         "name": "symfony/translation",
-        "version": "v5.1.2",
-        "version_normalized": "5.1.2.0",
+        "version": "v5.1.3",
+        "version_normalized": "5.1.3.0",
         "source": {
             "type": "git",
             "url": "https://github.com/symfony/translation.git",
-            "reference": "d387f07d4c15f9c09439cf3f13ddbe0b2c5e8be2"
+            "reference": "4b9bf719f0fa5b05253c37fc7b335337ec7ec427"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/symfony/translation/zipball/d387f07d4c15f9c09439cf3f13ddbe0b2c5e8be2",
-            "reference": "d387f07d4c15f9c09439cf3f13ddbe0b2c5e8be2",
+            "url": "https://api.github.com/repos/symfony/translation/zipball/4b9bf719f0fa5b05253c37fc7b335337ec7ec427",
+            "reference": "4b9bf719f0fa5b05253c37fc7b335337ec7ec427",
             "shasum": ""
         },
         "require": {
@@ -1996,7 +1996,7 @@
             "symfony/config": "",
             "symfony/yaml": ""
         },
-        "time": "2020-05-30T20:35:19+00:00",
+        "time": "2020-06-30T17:42:22+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -2122,17 +2122,17 @@
     },
     {
         "name": "voku/portable-ascii",
-        "version": "1.5.2",
-        "version_normalized": "1.5.2.0",
+        "version": "1.5.3",
+        "version_normalized": "1.5.3.0",
         "source": {
             "type": "git",
             "url": "https://github.com/voku/portable-ascii.git",
-            "reference": "618631dc601d8eb6ea0a9fbf654ec82f066c4e97"
+            "reference": "25bcbf01678930251fd572891447d9e318a6e2b8"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/voku/portable-ascii/zipball/618631dc601d8eb6ea0a9fbf654ec82f066c4e97",
-            "reference": "618631dc601d8eb6ea0a9fbf654ec82f066c4e97",
+            "url": "https://api.github.com/repos/voku/portable-ascii/zipball/25bcbf01678930251fd572891447d9e318a6e2b8",
+            "reference": "25bcbf01678930251fd572891447d9e318a6e2b8",
             "shasum": ""
         },
         "require": {
@@ -2144,7 +2144,7 @@
         "suggest": {
             "ext-intl": "Use Intl for transliterator_transliterate() support"
         },
-        "time": "2020-06-15T23:49:30+00:00",
+        "time": "2020-07-22T23:32:04+00:00",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -2177,6 +2177,10 @@
             {
                 "url": "https://github.com/voku",
                 "type": "github"
+            },
+            {
+                "url": "https://opencollective.com/portable-ascii",
+                "type": "open_collective"
             },
             {
                 "url": "https://www.patreon.com/voku",
