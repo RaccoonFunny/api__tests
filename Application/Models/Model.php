@@ -1,22 +1,16 @@
 <?php
-
+declare(strict_types = 1)  ;
 namespace Application\Models;
 
-use AmoCRM\EntitiesServices\CustomFields;
-use AmoCRM\EntitiesServices\Leads;
 use AmoCRM\Exceptions\AmoCRMoAuthApiException;
 use AmoCRM\Exceptions\InvalidArgumentException;
 use AmoCRM\Models\BaseApiModel;
 use AmoCRM\Models\CustomFields\CustomFieldModel;
-use AmoCRM\OAuth\OAuthService;
-use AmoCRM\OAuth\OAuthConfig;
 use AmoCRM\Collections\ContactsCollection;
 use AmoCRM\Collections\CompaniesCollection;
 use AmoCRM\Collections\Leads\LeadsCollection;
 use AmoCRM\Helpers\EntityTypesInterface;
 use AmoCRM\Collections\CustomFields\CustomFieldsCollection;
-use League\OAuth2\Client\Token\AccessToken;
-use AmoCRM\AmoCRM\Client\AmoCRMApiClientFactory;
 use AmoCRM\Client\AmoCRMApiClient;
 use AmoCRM\Models\CustomFields\MultiselectCustomFieldModel;
 use AmoCRM\Collections\CustomFields\CustomFieldEnumsCollection;
@@ -41,8 +35,8 @@ class Model
 
     function __construct()
     {
-        $this->quantity = 10;
-        $this->cluster = 10;
+        $this->quantity = 1000;
+        $this->cluster = 250;
     }
 
     /**
@@ -50,7 +44,20 @@ class Model
      */
     private function randNameContact()
     {
-        $names = ["Иванушка", "Данечка", "Андрюшенька", "Денисочка", "Олечка", "Гамид", "Ромушка", "Агафангел", "Арсений", "Альбин", "Гуго"];
+        $names = [
+            "Иванушка",
+            "Данечка",
+            "Андрюшенька",
+            "Денисочка",
+            "Олечка",
+            "Гамид",
+            "Ромушка",
+            "Агафангел",
+            "Арсений",
+            "Альбин",
+            "Гуго",
+        ];
+
         return $names[rand(0, 10)];
     }
 
@@ -59,7 +66,21 @@ class Model
      */
     private function randNameCompany()
     {
-        $names = ["Рога и Копыта", "Копыта", "Рога", "Молочник", "ИП 'Весёлый'", "ООО 'Зеленоглаое такси'", "АО 'Ромашка'", "Bunk", "Nuddlle", "Tandex", "Ямб или Хоррей", "Gozon"];
+        $names = [
+            "Рога и Копыта",
+            "Копыта",
+            "Рога",
+            "Молочник",
+            "ИП 'Весёлый'",
+            "ООО 'Зеленоглаое такси'",
+            "АО 'Ромашка'",
+            "Bunk",
+            "Nuddlle",
+            "Tandex",
+            "Ямб или Хоррей",
+            "Gozon",
+        ];
+
         return $names[rand(0, 10)];
     }
 
@@ -68,7 +89,16 @@ class Model
      */
     private function randNameLead()
     {
-        $names = ["Создание сайта", "Разработка приложение", "SEO оптимизация", "Оптимизация загрузки сайта", "Обновление сертификата безопасности", "Создание мобильной адаптации сайта", "Нарисовать логотип"];
+        $names = [
+            "Создание сайта",
+            "Разработка приложение",
+            "SEO оптимизация",
+            "Оптимизация загрузки сайта",
+            "Обновление сертификата безопасности",
+            "Создание мобильной адаптации сайта",
+            "Нарисовать логотип",
+        ];
+
         return $names[rand(0, 6)];
     }
 
@@ -100,6 +130,7 @@ class Model
             $contact->setName($this->randNameContact());
             $contactCollection->add($contact);
         }
+
         return $contactCollection;
     }
 
@@ -114,6 +145,7 @@ class Model
             $company->setName($this->randNameCompany());
             $companiesCollection->add($company);
         }
+
         return $companiesCollection;
     }
 
@@ -129,54 +161,47 @@ class Model
             $lead->setPrice(rand(1000, 50000));
             $leadsCollection->add($lead);
         }
+
         return $leadsCollection;
     }
 
     /**
      * @param $apiClient
      * @param $contactsCollection
+     *
      * @return ContactsCollection
      */
     private function sendContactCluster($apiClient, $contactsCollection)
     {
-        try {
-            $contactsCollection = $apiClient->contacts()->add($contactsCollection);
-        } catch (AmoCRMApiException $e) {
-            printError($e);
-            die;
-        }
+        $contactsCollection = $apiClient->contacts()->add($contactsCollection);
+
         return $contactsCollection;
     }
 
     /**
      * @param $apiClient
      * @param $companiesCollection
+     *
      * @return CompaniesCollection
      */
     private function sendCompaniesCluster($apiClient, $companiesCollection)
     {
-        try {
-            $companiesCollection = $apiClient->companies()->add($companiesCollection);
-        } catch (AmoCRMApiException $e) {
-            printError($e);
-            die;
-        }
+
+        $companiesCollection = $apiClient->companies()->add($companiesCollection);
+
         return $companiesCollection;
     }
 
     /**
      * @param $apiClient
      * @param $leadsCollection
+     *
      * @return LeadsCollection
      */
     private function sendLeadsCluster($apiClient, $leadsCollection)
     {
-        try {
             $leadsCollection = $apiClient->leads()->add($leadsCollection);
-        } catch (AmoCRMApiException $e) {
-            printError($e);
-            die;
-        }
+
         return $leadsCollection;
     }
 
@@ -185,33 +210,30 @@ class Model
      * @param ContactsCollection $contactsCollection
      * @param CompaniesCollection $companiesCollection
      * @param AmoCRMApiClient $apiClient
+     *
      * @return LeadsCollection
      */
-    private function linkContact(LeadsCollection $leadsCollection, ContactsCollection $contactsCollection, CompaniesCollection $companiesCollection, AmoCRMApiClient $apiClient)
-    {
+    private function linkLeads(
+        LeadsCollection $leadsCollection,
+        ContactsCollection $contactsCollection,
+        CompaniesCollection $companiesCollection,
+        AmoCRMApiClient $apiClient
+    ) {
         //связвываем компании и контакты с сделкой;
         for ($id = 0; $id < $this->cluster; $id++) {
             $links = new LinksCollection();
             $links->add($contactsCollection[$id]);
             $links->add($companiesCollection[$id]);
-            try {
-                $apiClient->leads()->link($leadsCollection[$id], $links);
-            } catch (AmoCRMApiException $e) {
-                printError($e);
-                die;
-            }
+            $apiClient->leads()->link($leadsCollection[$id], $links);
         }
-        try {
-            $leadsCollection = $apiClient->leads()->update($leadsCollection);
-        } catch (AmoCRMoAuthApiException $e) {
-        } catch (AmoCRMApiException $e) {
-            printError($e);
-        }
+        $leadsCollection = $apiClient->leads()->update($leadsCollection);
+
         return $leadsCollection;
     }
 
     /**
      * @param AmoCRMApiClient $apiClient
+     *
      * @return ContactsCollection
      * @throws AmoCRMApiException
      * @throws AmoCRMoAuthApiException
@@ -223,17 +245,19 @@ class Model
 
     /**
      * @param AmoCRMApiClient $apiClient
+     *
      * @return CompaniesCollection
      * @throws AmoCRMApiException
      * @throws AmoCRMoAuthApiException
      */
-    public function getCompany(AmoCRMApiClient $apiClient)
+    public function getCompanys(AmoCRMApiClient $apiClient)
     {
         return $apiClient->companies()->get(null, []);
     }
 
     /**
      * @param AmoCRMApiClient $apiClient
+     *
      * @return LeadsCollection
      * @throws AmoCRMApiException
      * @throws AmoCRMoAuthApiException
@@ -245,6 +269,7 @@ class Model
 
     /**
      * @param AmoCRMApiClient $apiClient
+     *
      * @return BaseApiModel|CustomFieldModel
      * @throws AmoCRMApiException
      * @throws AmoCRMoAuthApiException
@@ -253,61 +278,61 @@ class Model
     private function createMultiselect(AmoCRMApiClient $apiClient)
     {
 
-        //  Создаём службу кастомных полей
-        $customFieldsService = $apiClient->customFields(EntityTypesInterface::CONTACTS);
+        if (!$apiClient->customFields()->get()->getBy("name","Multiselect")) {
+            //  Создаём службу кастомных полей
+            $customFieldsService = $apiClient->customFields(EntityTypesInterface::CONTACTS);
+            //Создадим мультисписок
+            $cf = new MultiselectCustomFieldModel();
+            $cf->setName("Multiselect");
+            $cf->setEnums(
+                (new CustomFieldEnumsCollection())
+                    ->add(
+                        (new EnumModel())
+                            ->setValue('one')
+                            ->setSort(10)
+                    )
+                    ->add(
+                        (new EnumModel())
+                            ->setValue('two')
+                            ->setSort(20)
+                    )
+                    ->add(
+                        (new EnumModel())
+                            ->setValue('three')
+                            ->setSort(30)
+                    )
+            );
+            //  внесём наш мультисписок в аккаунт
+            $customFieldsCollection = new CustomFieldsCollection();
+            $customFieldsCollection->add($cf);
 
-        //Создадим мультисписок
-        $cf = new MultiselectCustomFieldModel();
-        $cf->setName("Multiselect");
-        $cf->setEnums(
-            (new CustomFieldEnumsCollection())
-                ->add(
-                    (new EnumModel())
-                        ->setValue('one')
-                        ->setSort(10)
-                )
-                ->add(
-                    (new EnumModel())
-                        ->setValue('two')
-                        ->setSort(20)
-                )
-                ->add(
-                    (new EnumModel())
-                        ->setValue('three')
-                        ->setSort(30)
-                )
-        );
-        //  внесём наш мультисписок в аккаунт
-        $customFieldsCollection = new CustomFieldsCollection();
-        $customFieldsCollection->add($cf);
-        //  Добавим поля в аккаунт
-        return $customFieldsService->addOne($cf);
+            //  Добавим поля в аккаунт
+            return $customFieldsService->addOne($cf);
+        }
+        return $apiClient->customFields()->get()->getBy("name","Multiselect");
     }
 
     public function linkMultiselect($cf, $import)
     {
-        for ($id = 0; $id < $this->cluster; $id++) {
+        foreach ($import as $item) {
             $customFieldValue = new MultiselectCustomFieldValuesModel;
             $customFieldsValueCollection = new CustomFieldsValuesCollection;
             $customFieldValue->setFieldId($cf->getID());
             $enumsCollection = $cf->getEnums();
             $customFieldValue->setValues(
                 (new MultiselectCustomFieldValueCollection())
-                    ->add((new MultiselectCustomFieldValueModel())
-                        ->setEnumId($enumsCollection[rand(0, 2)]->getID())
-                    ));
-            try {
-                $import[$id]->setCustomFieldsValues($customFieldsValueCollection);
-            } catch (AmoCRMApiException $e) {
-                printError($e);
-                die;
-            }
-            $id++;
+                    ->add(
+                        (new MultiselectCustomFieldValueModel())
+                            ->setEnumId($enumsCollection[rand(0, 2)]->getID())
+                    )
+            );
+            $item->setCustomFieldsValues($customFieldsValueCollection);
         }
     }
 
     /**
      * @param AmoCRMApiClient $apiClient
+     *
      * @throws AmoCRMApiException
      * @throws AmoCRMoAuthApiException
      * @throws InvalidArgumentException
@@ -320,7 +345,7 @@ class Model
             $contacts = $this->sendContactCluster($apiClient, $this->createContactsCluster());
             $companies = $this->sendCompaniesCluster($apiClient, $this->createCompaniesCluster());
             $leads = $this->sendLeadsCluster($apiClient, $this->createLeadsCluster());
-            $this->linkContact($leads, $contacts, $companies, $apiClient);
+            $this->linkLeads($leads, $contacts, $companies, $apiClient);
             $cf = $this->createMultiselect($apiClient);
             $this->linkMultiselect($cf, $contacts);
         }
