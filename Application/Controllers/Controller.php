@@ -1,7 +1,11 @@
 <?php
-declare(strict_types = 1)  ;
+
+declare(strict_types=1);
+
 namespace Application\Controllers;
 
+use AmoCRM\Exceptions\AmoCRMApiException;
+use AmoCRM\Exceptions\AmoCRMoAuthApiException;
 use AmoCRM\OAuth\OAuthService;
 use AmoCRM\OAuth\OAuthConfig;
 use AmoCRM\AmoCRM\Client\AmoCRMApiClientFactory;
@@ -28,16 +32,6 @@ class Controller
 
     function __construct()
     {
-        $this->view = new View();
-        $this->model = new Model();
-    }
-
-    /**
-     * @throws \AmoCRM\Exceptions\AmoCRMoAuthApiException
-     * @throws \AmoCRM\Exceptions\BadTypeException
-     */
-    public function auth()
-    {
         $oAuthConfig = new OAuthConfig();
         $oAuthService = new OAuthService();
         $oAuthConfig->setIntegrationId("7c2fc1ac-4f40-477b-8d15-bc307350293e");
@@ -55,42 +49,60 @@ class Controller
             $this->apiClient->setAccountBaseDomain($_GET['referer']);
         }
 
-
         if (!isset($_GET['code'])) {
             $state = bin2hex(random_bytes(16));
             $_SESSION['oauth2state'] = $state;
             if (isset($_GET['button'])) {
                 echo $this->apiClient->getOAuthClient()->getOAuthButton(
                     [
-                        'title' => 'Установить интеграцию',
-                        'compact' => true,
-                        'class_name' => 'className',
-                        'color' => 'default',
+                        'title'          => 'Установить интеграцию',
+                        'compact'        => true,
+                        'class_name'     => 'className',
+                        'color'          => 'default',
                         'error_callback' => 'handleOauthError',
-                        'state' => $state,
+                        'state'          => $state,
                     ]
                 );
                 die;
             } else {
-                $authorizationUrl = $this->apiClient->getOAuthClient()->getAuthorizeUrl([
-                    'state' => $state,
-                    'mode' => 'post_message',
-                ]);
+                $authorizationUrl = $this->apiClient->getOAuthClient()->getAuthorizeUrl(
+                    [
+                        'state' => $state,
+                        'mode'  => 'post_message',
+                    ]
+                );
                 header('Location: ' . $authorizationUrl);
                 die;
             }
-        } elseif (empty($_GET['state']) || empty($_SESSION['oauth2state']) || ($_GET['state'] !== $_SESSION['oauth2state'])) {
+        } elseif (
+            empty($_GET['state']) || empty($_SESSION['oauth2state'])
+            || ($_GET['state'] !== $_SESSION['oauth2state'])
+        ) {
             unset($_SESSION['oauth2state']);
             exit('Invalid state, please reconnect to the server');
         }
         $accessToken = $this->apiClient->getOAuthClient()->getAccessTokenByCode($_GET['code']);
         $this->apiClient->setAccessToken($accessToken);
 
+        $this->view = new View();
+        $this->model = new Model($this->apiClient);
+
     }
+
 
     function testApi()
     {
-        $this->model->createEssence($this->apiClient);
-        $this->view->generate($this->model->getContact($this->apiClient), $this->model->getCompanies($this->apiClient), $this->model->getLeads($this->apiClient));
+        $this->model->createEssence();
+        try {
+            $this->view->generate(
+                $this->model->getContact(),
+                $this->model->getCompanies(),
+                $this->model->getLeads()
+            );
+        } catch (AmoCRMoAuthApiException $e) {
+        } catch (AmoCRMApiException $e) {
+            print $e;
+            die;
+        }
     }
 }

@@ -1,5 +1,7 @@
 {
     "require": {
-        "amocrm/amocrm-api-library": "^0.3.5"
+        "amocrm/amocrm-api-library": "^0.3.5",
+	    "ext-curl": "*",
+	    "ext-json": "*"
     }
 }

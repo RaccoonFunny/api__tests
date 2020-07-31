@@ -1,8 +1,10 @@
 <?php
-declare(strict_types = 1)  ;
+
+declare(strict_types=1);
 function printEssence($essence, $title)
 {
-    echo "<div class=\"accordion\" id=\"accordionExample\" style='color:#" . rand(0, 9) . rand(0, 9) . rand(0, 9) . "'>";
+    echo "<div class=\"accordion\" id=\"accordionExample\" style='color:#" . rand(0, 9) . rand(0, 9) . rand(0, 9)
+        . "'>";
     echo "
 <div class=\"card\">
     <div class=\"card-header\" id=\"headingTwo\">
