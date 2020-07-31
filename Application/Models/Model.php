@@ -2,6 +2,7 @@
 declare(strict_types = 1)  ;
 namespace Application\Models;
 
+use AmoCRM\Exceptions\AmoCRMApiHttpClientException;
 use AmoCRM\Exceptions\AmoCRMoAuthApiException;
 use AmoCRM\Exceptions\InvalidArgumentException;
 use AmoCRM\Models\BaseApiModel;
@@ -35,7 +36,7 @@ class Model
 
     function __construct()
     {
-        $this->quantity = 1000;
+        $this->quantity = 250;
         $this->cluster = 250;
     }
 
@@ -106,7 +107,7 @@ class Model
      * @param $quantity
      * @param $cluster
      */
-    private function isCorrect($quantity, $cluster)
+    private function isCorrect(int $quantity, int $cluster)
     {
         if ($quantity == null || $cluster == null) {
             throw new Exception('Quantity or Cluster is undefined.');
@@ -166,43 +167,38 @@ class Model
     }
 
     /**
-     * @param $apiClient
-     * @param $contactsCollection
+     * @param AmoCRMApiClient $apiClient
+     * @param ContactsCollection $contactsCollection
      *
      * @return ContactsCollection
      */
-    private function sendContactCluster($apiClient, $contactsCollection)
+    private function sendContactCluster(AmoCRMApiClient $apiClient, ContactsCollection $contactsCollection)
     {
-        $contactsCollection = $apiClient->contacts()->add($contactsCollection);
-
-        return $contactsCollection;
+        return $apiClient->contacts()->add($contactsCollection);
     }
 
     /**
-     * @param $apiClient
-     * @param $companiesCollection
+     * @param AmoCRMApiClient $apiClient
+     * @param CompaniesCollection $companiesCollection
      *
-     * @return CompaniesCollection
+     * @return  CompaniesCollection
      */
-    private function sendCompaniesCluster($apiClient, $companiesCollection)
+    private function sendCompaniesCluster(AmoCRMApiClient $apiClient, CompaniesCollection $companiesCollection)
     {
 
-        $companiesCollection = $apiClient->companies()->add($companiesCollection);
-
-        return $companiesCollection;
+        return $apiClient->companies()->add($companiesCollection);
     }
 
     /**
-     * @param $apiClient
-     * @param $leadsCollection
+     * @param AmoCRMApiClient $apiClient
+     * @param LeadsCollection $leadsCollection
      *
      * @return LeadsCollection
      */
-    private function sendLeadsCluster($apiClient, $leadsCollection)
+    private function sendLeadsCluster(AmoCRMApiClient $apiClient, LeadsCollection $leadsCollection)
     {
-            $leadsCollection = $apiClient->leads()->add($leadsCollection);
 
-        return $leadsCollection;
+        return $apiClient->leads()->add($leadsCollection);
     }
 
     /**
@@ -240,7 +236,25 @@ class Model
      */
     public function getContact(AmoCRMApiClient $apiClient)
     {
-        return $apiClient->contacts()->get(null, []);
+        $contactService = $apiClient->contacts();
+        $contacts = $contactService->get();
+        $contactsAll = new ContactsCollection();
+        foreach ($contacts as $item){
+            $contactsAll->add($item);
+        }
+        $e = 200;
+        while ($e != 204) {
+            try {
+                $contacts = $contactService->nextPage($contacts);
+            } catch (AmoCRMApiException  $e) {
+                $e = $e->getCode();
+            }
+            foreach ($contacts as $item){
+                $contactsAll->add($item);
+            }
+        }
+
+        return $contactsAll;
     }
 
     /**
@@ -250,9 +264,27 @@ class Model
      * @throws AmoCRMApiException
      * @throws AmoCRMoAuthApiException
      */
-    public function getCompanys(AmoCRMApiClient $apiClient)
+    public function getCompanies(AmoCRMApiClient $apiClient)
     {
-        return $apiClient->companies()->get(null, []);
+        $companiesService = $apiClient->companies();
+        $companies = $companiesService->get();
+        $companiesAll = new CompaniesCollection();
+        foreach ($companies as $item){
+            $companiesAll->add($item);
+        }
+        $e = 200;
+        while ($e != 204) {
+            try {
+                $companies = $companiesService->nextPage($companies);
+            } catch (AmoCRMApiException  $e) {
+                $e = $e->getCode();
+            }
+            foreach ($companies as $item){
+                $companiesAll->add($item);
+            }
+        }
+
+        return $companiesAll;
     }
 
     /**
@@ -264,7 +296,25 @@ class Model
      */
     public function getLeads(AmoCRMApiClient $apiClient)
     {
-        return $apiClient->leads()->get(null, []);
+        $leadsService = $apiClient->leads();
+        $leads = $leadsService->get();
+        $leadsAll = new LeadsCollection();
+        foreach ($leads as $item){
+            $leadsAll->add($item);
+        }
+        $e = 200;
+        while ($e != 204) {
+            try {
+                $leads = $leadsService->nextPage($leads);
+            } catch (AmoCRMApiException  $e) {
+                $e = $e->getCode();
+            }
+            foreach ($leads as $item){
+                $leadsAll->add($item);
+            }
+        }
+
+        return $leadsAll;
     }
 
     /**
@@ -278,7 +328,7 @@ class Model
     private function createMultiselect(AmoCRMApiClient $apiClient)
     {
 
-        if (!$apiClient->customFields()->get()->getBy("name","Multiselect")) {
+        if (!($apiClient->customFields(EntityTypesInterface::CONTACTS)->get()->getBy("name", "Multiselect"))) {
             //  Создаём службу кастомных полей
             $customFieldsService = $apiClient->customFields(EntityTypesInterface::CONTACTS);
             //Создадим мультисписок
@@ -309,10 +359,11 @@ class Model
             //  Добавим поля в аккаунт
             return $customFieldsService->addOne($cf);
         }
+
         return $apiClient->customFields()->get()->getBy("name","Multiselect");
     }
 
-    public function linkMultiselect($cf, $import)
+    public function linkMultiselect(MultiselectCustomFieldModel $cf, $import)
     {
         foreach ($import as $item) {
             $customFieldValue = new MultiselectCustomFieldValuesModel;
@@ -342,9 +393,12 @@ class Model
         $this->isCorrect($this->quantity, $this->cluster);
         $range = $this->quantity / $this->cluster;
         for ($f = 0; $f < $range; $f++) {
-            $contacts = $this->sendContactCluster($apiClient, $this->createContactsCluster());
-            $companies = $this->sendCompaniesCluster($apiClient, $this->createCompaniesCluster());
-            $leads = $this->sendLeadsCluster($apiClient, $this->createLeadsCluster());
+            $contacts = $this->createContactsCluster();
+            $companies = $this->createCompaniesCluster();
+            $leads = $this->createLeadsCluster();
+            $contacts = $this->sendContactCluster($apiClient, $contacts);
+            $companies = $this->sendCompaniesCluster($apiClient, $companies);
+            $leads = $this->sendLeadsCluster($apiClient, $leads);
             $this->linkLeads($leads, $contacts, $companies, $apiClient);
             $cf = $this->createMultiselect($apiClient);
             $this->linkMultiselect($cf, $contacts);

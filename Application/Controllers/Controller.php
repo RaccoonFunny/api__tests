@@ -70,6 +70,6 @@ class Controller
     function testApi()
     {
         $this->model->createEssence($this->apiClient);
-        $this->view->generate($this->model->getContact($this->apiClient), $this->model->getCompanys($this->apiClient), $this->model->getLeads($this->apiClient));
+        $this->view->generate($this->model->getContact($this->apiClient), $this->model->getCompanies($this->apiClient), $this->model->getLeads($this->apiClient));
     }
 }
