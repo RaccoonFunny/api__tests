@@ -7,7 +7,7 @@ function printEssence($essence, $title)
 <div class=\"card\">
     <div class=\"card-header\" id=\"headingTwo\">
         <h5 class=\"mb-0\">
-            <button class=\"btn btn-link collapsed\" type=\"button\" data-toggle=\"collapse\" data-target=\"#$title\"
+            <button class=\"btn btn-link accordion\" type=\"button\" data-toggle=\"collapse\" data-target=\"#$title\"
                     aria-expanded=\"false\" aria-controls=\"collapseTwo\">
                 $title
             </button>
